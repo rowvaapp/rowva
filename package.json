@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start -p 3000",
     "postinstall": "prisma generate",
-    "prisma:dev": "prisma migrate dev --name init",
+  "prisma:dev": "prisma migrate dev --name init",
+  "prisma:deploy": "prisma migrate deploy",
+  "prisma:reset": "prisma migrate reset --force",
   "prisma:studio": "prisma studio",
   "scan:secrets": "gitleaks detect --no-color --redact || echo 'Tip: install gitleaks (brew install gitleaks) to enable this scan'"
   },
