@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  accounts  Account[]
+  mappings  Mapping[]
+  formats   Format[]
+  links     Link[]
+}
+
+model Account {
+  id           String   @id @default(cuid())
+  userId       String
+  provider     String   // 'google' | 'notion'
+  accessToken  String
+  refreshToken String?
+  scope        String?
+  expiresAt    DateTime?
+  extraJson    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+  // External identifier for the provider account to allow multiple connections per provider
+  // - Google: the account email (e.g., name@gmail.com)
+  // - Notion: the workspace_id from OAuth token
+  externalId   String?
+  displayName  String?
+  accountEmail String?
+  workspaceId  String?
+  workspaceName String?
+
+  // Gmail push notifications tracking
+  gmailHistoryId     String?
+  gmailWatchActive   Boolean  @default(false)
+  gmailWatchExpiresAt DateTime?
+
+  // Back-relations
+  mappingsAsGoogle Mapping[] @relation("GoogleAccount")
+  mappingsAsNotion Mapping[] @relation("NotionAccount")
+  links            Link[]
+
+  @@unique([userId, provider, externalId])
+}
+
+model Mapping {
+  id                String   @id @default(cuid())
+  userId            String
+  gmailLabel        String
+  // JSON-serialized string array of Gmail label IDs (SQLite lacks native Json type)
+  gmailLabelsJson   String?
+  notionDatabaseId  String
+  enabled           Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id])
+  // Link this mapping to specific provider accounts
+  googleAccountId   String?
+  notionAccountId   String?
+  googleAccount     Account? @relation("GoogleAccount", fields: [googleAccountId], references: [id])
+  notionAccount     Account? @relation("NotionAccount", fields: [notionAccountId], references: [id])
+  links             Link[]
+}
+
+model Format {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  json      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Link {
+  id            String   @id @default(cuid())
+  userId        String
+  gmailMessageId String  @unique
+  gmailThreadId  String
+  notionPageId   String
+  checksum       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  mappingId     String?
+  mapping       Mapping? @relation(fields: [mappingId], references: [id])
+  googleAccountId String?
+  googleAccount   Account? @relation(fields: [googleAccountId], references: [id])
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  userId    String?
+  level     String
+  message   String
+  meta      String?
+  createdAt DateTime @default(now())
+}

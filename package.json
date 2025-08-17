@@ -1,0 +1,31 @@
+{
+  "name": "db-enricher-next",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "postinstall": "prisma generate",
+    "prisma:dev": "prisma migrate dev --name init",
+  "prisma:studio": "prisma studio",
+  "scan:secrets": "gitleaks detect --no-color --redact || echo 'Tip: install gitleaks (brew install gitleaks) to enable this scan'"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.14",
+    "@prisma/client": "^5.17.0",
+    "autoprefixer": "^10.4.19",
+    "googleapis": "^131.0.0",
+    "next": "^14.2.3",
+    "postcss": "^8.4.38",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "prisma": "^5.17.0",
+    "typescript": "^5.5.3"
+  }
+}

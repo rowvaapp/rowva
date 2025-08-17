@@ -1,0 +1,358 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* Notion-inspired color palette */
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --panel2: #f7f6f3;
+  --border: #e9e9e7;
+  --border-light: #f1f1ef;
+  --text: #37352f;
+  --text-light: #787774;
+  --text-lighter: #9b9a97;
+  --hover: #f1f1ef;
+  --accent: #2383e2;
+  --accent-hover: #1a73d1;
+  --sidebar: #f7f6f3;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Avoid layout shift when transient UI appears */
+.toast-space {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+body,
+#__next {
+  min-height: 100vh;
+}
+
+/* Avoid horizontal scrollbars on mobile */
+html,
+body {
+  overflow-x: hidden;
+}
+
+.container-like {
+  @apply max-w-5xl mx-auto px-4;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.btn {
+  @apply inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all duration-200;
+  background: var(--accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+  @apply inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all duration-200;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary:hover {
+  background: var(--hover);
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+/* Icon-only button */
+.btn-icon {
+  @apply inline-flex items-center justify-center rounded-lg transition-all duration-200;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: var(--hover);
+  border-color: var(--border);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.btn-icon:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Destructive variant for icon-only button */
+.btn-icon-danger {
+  border-color: #fecaca; /* red-200 */
+  color: #b91c1c; /* red-700 */
+}
+
+.btn-icon-danger:hover {
+  background: #fee2e2; /* red-100 */
+  border-color: #fca5a5; /* red-300 */
+}
+
+.input {
+  @apply w-full rounded-lg p-3 outline-none transition-all duration-200;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.1);
+}
+
+.label {
+  @apply text-sm font-medium mb-2;
+  color: var(--text);
+}
+
+.grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.badge {
+  @apply inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium;
+  background: var(--panel2);
+  color: var(--text-light);
+  border: 1px solid var(--border-light);
+}
+
+hr.line {
+  border-color: var(--border);
+  margin: 24px 0;
+}
+
+/* Responsive utilities */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 32px;
+  }
+}
+
+.grid-responsive {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    gap: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid-responsive {
+    gap: 24px;
+  }
+}
+
+.grid-3-responsive {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid-3-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-3-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.flex-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .flex-responsive {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.text-responsive {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .text-responsive {
+    font-size: 30px;
+  }
+}
+
+@media (min-width: 768px) {
+  .text-responsive {
+    font-size: 36px;
+  }
+}
+
+.hidden-mobile {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .hidden-mobile {
+    display: block;
+  }
+}
+
+.hidden-desktop {
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .hidden-desktop {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .card {
+    padding: 16px;
+  }
+
+  .btn,
+  .btn-secondary {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .input {
+    padding: 10px 12px;
+  }
+}
+
+/* Notion-like typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+/* Notion-like nav items */
+.nav-item {
+  @apply block px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200;
+  color: var(--text-light);
+}
+
+.nav-item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-lighter);
+}
+
+/* Responsive media */
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Support iOS safe areas for the sticky top bar */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
