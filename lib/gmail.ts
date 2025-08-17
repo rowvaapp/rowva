@@ -356,7 +356,10 @@ function parseExtraJson(raw?: string | null): WatchState {
   }
 }
 
-async function updateWatchState(accountId: string, patch: Partial<WatchState["gmail"]>) {
+async function updateWatchState(
+  accountId: string,
+  patch: Partial<WatchState["gmail"]>
+) {
   const acc = await prisma.account.findUnique({ where: { id: accountId } });
   if (!acc) return;
   const state = parseExtraJson(acc.extraJson);
@@ -372,16 +375,25 @@ async function updateWatchState(accountId: string, patch: Partial<WatchState["gm
 
 // Start or renew Gmail push notifications for an account. Requires a Pub/Sub topic
 // configured in Google Cloud and Gmail API scopes including gmail.readonly.
-export async function startGmailWatch(userEmail: string, opts?: { accountId?: string }) {
-  const { gmail, account } = await getGmailClient(userEmail, { accountId: opts?.accountId });
+export async function startGmailWatch(
+  userEmail: string,
+  opts?: { accountId?: string }
+) {
+  const { gmail, account } = await getGmailClient(userEmail, {
+    accountId: opts?.accountId,
+  });
   const topicName = process.env.GMAIL_PUBSUB_TOPIC;
   if (!topicName) throw new Error("GMAIL_PUBSUB_TOPIC not set");
   const watch = await gmail.users.watch({
     userId: "me",
     requestBody: { topicName },
   });
-  const historyId = (watch.data as any)?.historyId ? String((watch.data as any).historyId) : undefined;
-  const expirationMs = (watch.data as any)?.expiration ? Number((watch.data as any).expiration) : undefined;
+  const historyId = (watch.data as any)?.historyId
+    ? String((watch.data as any).historyId)
+    : undefined;
+  const expirationMs = (watch.data as any)?.expiration
+    ? Number((watch.data as any).expiration)
+    : undefined;
   await updateWatchState(account.id, {
     historyId,
     watchActive: true,
@@ -390,8 +402,13 @@ export async function startGmailWatch(userEmail: string, opts?: { accountId?: st
   return { ok: true, historyId } as const;
 }
 
-export async function stopGmailWatch(userEmail: string, opts?: { accountId?: string }) {
-  const { gmail, account } = await getGmailClient(userEmail, { accountId: opts?.accountId });
+export async function stopGmailWatch(
+  userEmail: string,
+  opts?: { accountId?: string }
+) {
+  const { gmail, account } = await getGmailClient(userEmail, {
+    accountId: opts?.accountId,
+  });
   try {
     await gmail.users.stop({ userId: "me" });
   } finally {
@@ -408,25 +425,42 @@ async function ingestMessageToMapping(
   mapping: DbMapping,
   labelMap: Map<string, { name: string; type: string }>
 ) {
-  const full = await gmailClient.users.messages.get({ userId: "me", id: messageId, format: "full" });
+  const full = await gmailClient.users.messages.get({
+    userId: "me",
+    id: messageId,
+    format: "full",
+  });
   const payload: any = full.data.payload;
-  const headersArr = (payload?.headers || []) as Array<{ name: string; value?: string }>;
-  const headers = Object.fromEntries(headersArr.map((h) => [String(h.name).toLowerCase(), h.value || ""]));
+  const headersArr = (payload?.headers || []) as Array<{
+    name: string;
+    value?: string;
+  }>;
+  const headers = Object.fromEntries(
+    headersArr.map((h) => [String(h.name).toLowerCase(), h.value || ""])
+  );
   const subject = headers["subject"] || "";
   const from = headers["from"] || "";
   const dateMs = Number(full.data.internalDate || Date.now());
   const bodyPart = pickBestPart(payload);
   const body = decodeBody(bodyPart?.data, bodyPart?.mimeType);
   const enriched = parseEmail(subject, body, from);
-  const checksum = crypto.createHash("sha1").update(subject + "::" + body).digest("hex");
+  const checksum = crypto
+    .createHash("sha1")
+    .update(subject + "::" + body)
+    .digest("hex");
   const msgLabels: string[] = [];
   const ids = (full.data.labelIds || []) as string[];
   for (const id of ids) {
     const meta = labelMap.get(id);
     if (meta && meta.type === "user") msgLabels.push(meta.name);
   }
-  await ensureNotionSchema(mapping.notionDatabaseId, { userEmail, notionAccountId: mapping.notionAccountId || undefined });
-  const exists = await prisma.link.findUnique({ where: { gmailMessageId: messageId } });
+  await ensureNotionSchema(mapping.notionDatabaseId, {
+    userEmail,
+    notionAccountId: mapping.notionAccountId || undefined,
+  });
+  const exists = await prisma.link.findUnique({
+    where: { gmailMessageId: messageId },
+  });
   const { pageId } = await upsertNotionPage(
     mapping.notionDatabaseId,
     {
@@ -455,7 +489,11 @@ async function ingestMessageToMapping(
   }
 }
 
-export async function processHistoryForAccount(userEmail: string, accountId: string, newHistoryId: string) {
+export async function processHistoryForAccount(
+  userEmail: string,
+  accountId: string,
+  newHistoryId: string
+) {
   const { gmail, account } = await getGmailClient(userEmail, { accountId });
   const acc = await prisma.account.findUnique({ where: { id: account.id } });
   const state = parseExtraJson(acc?.extraJson);
@@ -464,7 +502,9 @@ export async function processHistoryForAccount(userEmail: string, accountId: str
   const labelsResp = await gmail.users.labels.list({ userId: "me" });
   const labels = labelsResp.data.labels || [];
   const labelMap = new Map<string, { name: string; type: string }>();
-  for (const l of labels) if (l.id && l.name) labelMap.set(l.id, { name: l.name, type: l.type || "" });
+  for (const l of labels)
+    if (l.id && l.name)
+      labelMap.set(l.id, { name: l.name, type: l.type || "" });
 
   // Collect message IDs from history between startHistoryId and now
   let pageToken: string | undefined = undefined;
@@ -472,11 +512,19 @@ export async function processHistoryForAccount(userEmail: string, accountId: str
   if (startHistoryId) {
     try {
       do {
-        const hist: any = await gmail.users.history.list({ userId: "me", startHistoryId, pageToken, historyTypes: ["messageAdded"] });
+        const hist: any = await gmail.users.history.list({
+          userId: "me",
+          startHistoryId,
+          pageToken,
+          historyTypes: ["messageAdded"],
+        });
         const histories = (hist.data.history || []) as any[];
         for (const h of histories) {
-          const added = (h.messagesAdded || []) as Array<{ message?: { id?: string } }>;
-          for (const a of added) if (a.message?.id) messageIds.add(a.message.id);
+          const added = (h.messagesAdded || []) as Array<{
+            message?: { id?: string };
+          }>;
+          for (const a of added)
+            if (a.message?.id) messageIds.add(a.message.id);
         }
         pageToken = hist.data.nextPageToken || undefined;
       } while (pageToken);
@@ -494,7 +542,11 @@ export async function processHistoryForAccount(userEmail: string, accountId: str
 
   // Load user mappings scoped to this Google account
   const mappings = (await prisma.mapping.findMany({
-    where: { userId: acc!.userId, enabled: true, googleAccountId: account.id },
+    where: {
+      userId: acc!.userId,
+      enabled: true,
+      OR: [{ googleAccountId: account.id }, { googleAccountId: null }],
+    },
   })) as unknown as Array<DbMapping & { gmailLabelsJson?: string | null }>;
   if (mappings.length === 0) {
     await updateWatchState(account.id, { historyId: newHistoryId });
@@ -505,7 +557,10 @@ export async function processHistoryForAccount(userEmail: string, accountId: str
   const mappingChecks = mappings.map((m) => {
     let ids: string[] = [];
     try {
-      if ((m as any).gmailLabelsJson) ids = JSON.parse(((m as any).gmailLabelsJson as string) || "[]") as string[];
+      if ((m as any).gmailLabelsJson)
+        ids = JSON.parse(
+          ((m as any).gmailLabelsJson as string) || "[]"
+        ) as string[];
     } catch {}
     return { m, ids } as { m: DbMapping; ids: string[] };
   });
@@ -514,14 +569,25 @@ export async function processHistoryForAccount(userEmail: string, accountId: str
   for (const mid of messageIds) {
     try {
       // get message label ids to test against mapping
-      const meta = await gmail.users.messages.get({ userId: "me", id: mid, format: "metadata" });
+      const meta = await gmail.users.messages.get({
+        userId: "me",
+        id: mid,
+        format: "metadata",
+      });
       const ids = (meta.data.labelIds || []) as string[];
       const matching = mappingChecks.filter(({ ids: mapIds, m }) =>
-        (mapIds && mapIds.length ? mapIds.some((id) => ids.includes(id)) : true)
+        mapIds && mapIds.length ? mapIds.some((id) => ids.includes(id)) : true
       );
       if (matching.length === 0) continue;
       for (const { m } of matching) {
-        await ingestMessageToMapping(gmail, account, userEmail, mid, m, labelMap);
+        await ingestMessageToMapping(
+          gmail,
+          account,
+          userEmail,
+          mid,
+          m,
+          labelMap
+        );
         processed++;
       }
     } catch {

@@ -7,9 +7,11 @@ import { processHistoryForAccount } from "@/lib/gmail";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+  console.log("gmail_push: raw", JSON.stringify(body).slice(0, 500));
     // Pub/Sub message
     const msg = body?.message;
-    if (!msg) return NextResponse.json({ error: "no_message" }, { status: 400 });
+    if (!msg)
+      return NextResponse.json({ error: "no_message" }, { status: 400 });
 
     // For subscription validation
     if (body?.subscription) {
@@ -18,7 +20,8 @@ export async function POST(req: NextRequest) {
 
     const dataB64: string | undefined = msg.data;
     if (!dataB64) return NextResponse.json({ ok: true });
-    const dataStr = Buffer.from(dataB64, "base64").toString("utf8");
+  const dataStr = Buffer.from(dataB64, "base64").toString("utf8");
+  console.log("gmail_push: data", dataStr);
     const data = JSON.parse(dataStr);
     const historyId = String(data.historyId || "");
     const emailAddress: string | undefined = data.emailAddress;
@@ -28,13 +31,19 @@ export async function POST(req: NextRequest) {
     const account = await prisma.account.findFirst({
       where: { provider: "google", accountEmail: emailAddress },
     });
-    if (!account) return NextResponse.json({ ok: true });
+    if (!account) {
+      console.warn("gmail_push: no_account_for_email", emailAddress);
+      return NextResponse.json({ ok: true });
+    }
 
     // Our demo assumes a single user "demo@local"; adapt as needed
     await processHistoryForAccount("demo@local", account.id, historyId);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || String(e) }, { status: 200 });
+    return NextResponse.json(
+      { ok: false, error: e?.message || String(e) },
+      { status: 200 }
+    );
   }
 }
 
